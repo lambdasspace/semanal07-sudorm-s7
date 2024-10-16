@@ -1,0 +1,326 @@
+\begin{enumerate}
+    \item {
+        \begin{itemize}
+            \item Dada la siguiente expresión en MiniLisp.
+            \begin{verbatim}
+            (let (sum (lambda (n) (if0 n 0 (+ n (sum (- n 1))))))
+            sum 5))
+            \end{verbatim}
+            \item {Ejecutarla y explicar el resultado.}\\
+            Al ejecutar esta expresión nos arroja como resultado un error de variable libre, siendo la variable que queda libre sum.\\
+            \item {Modificarla usando el combinador de punto fijo Y, volver a ejecutarla y explicar el resultado.}\\
+            La version modificada con el combinador y basandonos en las notas quedaria como sigue:\\
+            \begin{verbatim}
+                 let ( Y ( lambda ( f ) (( lambda ( x ) ( f ( x x ) ) ) ( lambda ( x ) ( f ( x x ) ) ) ) ) ) 
+                 ( let ( sum ( Y ( lambda ( sum ) ( lambda ( n ) ( if0 n 0 (+ n ( sum (- n 1) ) ) ) ) ) ) ) ( sum 5) )
+            \end{verbatim}
+            Donde n es 5 y al hacer la ejecución tomamos la definición de nuestro combinador Y, la aplicamos a nuestra funcion de suma, con lo que esto quedaria:\\
+            \begin{verbatim}
+                (lambda(Y)(lambda(sum))5)
+            \end{verbatim}
+            donde evaluamos Y y sustituimos en f por nuestro parametro lambda(sum) y se hacen las betareducciones en nuestra evaluacion de la siguiente manera:\\
+            \begin{verbatim}
+                ((lambda(x)(lambda(sum)(xx)))(lambda(x)(lambda(sum)(xx)))5)
+                beta redux:  ((lambda(sum))(lambda(x)(lambda(sum)(xx)))(lambda(x)(lambda(sum)(xx)))5) 
+            \end{verbatim}
+            Ahora tenemos en nuestra beta reduccion la definicion de nuestro combinador Y por lo que esto se puede ver como:\\
+            \begin{verbatim}
+                (lambda (sum) (lambda (Y)(lambda (sum))) 5)
+                beta redux: (lambda (n) (if0 n 0 (+ n ((Y)(sum)) (-5 1)) 5)).
+                eval: (+ 5 (((Y)(sum)) (- 5 1))).
+                eval: (+ 5 (((Y)(sum)) (4)))
+            \end{verbatim}
+            Tenemos ahora nuestra Y sum con 4, entonces repitiendo los pasos anteriores con Y sum n-1, y simulando una recursion solamente con lets dentro de nuestro minilisp, nuestro resultado final sera 15. que sera la suma de la evaluacion final que tenemos al llegar a 0 que seria 0+1+2+3+4+5=15.
+        \end{itemize}
+    }
+    \item { Evaluar la siguiente expresión en Racket, explicar su resultado y dar la continuación asociada a evaluar
+    utilizando la notación $\lambda\uparrow$.
+    \begin{verbatim}
+        (define c #f)
+        (+ 1 (+ 2 (+ 3 (+ let/cc k (set! c k) 4) 5))))
+        (c 10)
+    \end{verbatim}
+    La expresión imprime $15$ y $21$
+    \begin{itemize}
+        \item [1.] Se inicializa una variable $c$ con el valor $\#f$.
+        \item [2.] Se evalúa la suma $(+ 1 (+ 2 (+ 3$ evaluando el primer operando y el segundo.
+        \item[3.]  Al llegar al operando $(+ let/cc (set! c k)$, $let/cc$ guarda la continuación $k$ de la evaluación
+        en la variable previamente definida como $c$.
+        \item [4.] Se termina de evaluar la suma con los operandos $4$ (puesto que no se llamó la continuación) y $5$, siendo $1 + 2 + 3 + 4 + 5 = 15$ y se imprime el resultado.
+        \item [5.] Se llama la continuación $c$ con $10$, lo que sustituye a $4$, con lo que ahora la suma se evalúa
+        como $1 + 2 + 3 + 10 + 5 = 21$ y se imprime el resultado.
+    \end{itemize}
+    La continuación asociada con $\lambda \uparrow$ sería:
+    \begin{align*}
+        (\lambda\uparrow(u) (+ 1 (+ 2 (+ 3 (+ u 5)))))
+    \end{align*}
+    }
+    \newpage
+    \item {
+        \begin{itemize}
+            \item {Definir la función recursiva \verb|ocurrenciasElementos| que toma como argumentos dos listas y devuelve una lista de parejas, en donde cada pareja contiene en su parte izquierda un elemento de la segunda lista y en su parte derecha el número de veces que aparece dicho elemento en la primera lista.
+
+            (Le llamaremos \verb|ocurrenciasElementosRc|).
+                \begin{lstlisting}[language=Haskell]
+{- ocurrenciasElementosRC: Funcion RECURSIVA que toma como argumentos dos
+    listas y devuelve una lista de parejas, en donde cada pareja contiene en su
+    parte izquierda un elemento de la segunda lista y en su parte derecha el
+    numero de veces que aparece dicho elemento en la primera lista. -}
+ocurrenciasElementosRc :: forall a. (Eq a, Show a) => [a] -> [a] -> [(a,Int)]
+ocurrenciasElementosRc xs [] = []
+ocurrenciasElementosRc xs (y:ys) = (y, length (filter (== y) xs)) : ocurrenciasElementosRc xs ys\end{lstlisting}}
+            \item { Mostrar los registros de activación generados por la función definida en el ejercicio anterior con la llamada \verb|ocurrenciasElementos [1,2,3] [1,2]|.
+                \begin{center}
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    ocurrenciasElementos xs [] & [] & [1,2,3] [] & [] \\ \hline
+                    (==) x y & False & 2 3 & False \\ \hline
+                    (==) x y & x == x & 2 2 & True \\ \hline
+                    (==) x y & False & 2 1 & False \\ \hline
+                    filter p xs & [x $|$ x $\leftarrow$ xs, p x] & (==2) [1,2,3] & [2] \\ \hline
+                    length l & length [] & [] & 1 \\ \hline
+                    length l & length (x:xs) & [1] & 1 \\ \hline
+                    length l & length (x:xs) & (filter(==y)xs) & 1 \\ \hline
+                    (:) a [a] / cons a [a] & a:[a] & length(filter(==y)xs):ocurrenciasElementosRc xs ys & [(2,1)] \\ \hline
+                    ocurrenciasElementos xs (y:ys) & (y, length(filter(==y)xs)):ocurrenciasElementosRc xs ys & [1,2,3] [2] & [(2,1)] \\ \hline
+                    (==) x y & False & 1 3 & False \\ \hline
+                    (==) x y & False & 1 2 & False \\ \hline
+                    (==) x y & x == x & 1 1 & True \\ \hline
+                    filter p xs & [x $|$ x $\leftarrow$ xs, p x] & (==1) [1,2,3] & [1] \\ \hline
+                    length l & length [] & [] & 1 \\ \hline
+                    length l & length (x:xs) & [2] & 1 \\ \hline
+                    length l & length (x:xs) & (filter(==y)xs) & 1 \\ \hline
+                    (:) a [a] / cons a [a] & a:[a] & length(filter(==y)xs):ocurrenciasElementosRc xs ys & [(1,1),(2,1)] \\ \hline
+                    ocurrenciasElementos xs (y:ys) & (y, length(filter(==y)xs)):ocurrenciasElementosRc xs ys & [1,2,3] [1,2] & [(1,1),(2,1)] \\ \hline
+                \end{NiceTabular}
+                \end{center}
+
+                
+            }
+            
+            \item {Optimizar la función definida usando recursión de cola. Deben transformar todas las funciones auxiliares que utilicen.
+                \begin{lstlisting}[language=Haskell]
+{- ocurrenciasElementos: Funcion que toma como argumentos dos listas y
+    devuelve una lista de parejas, en donde cada pareja contiene en su parte
+    izquierda un elemento de la segunda lista y en su parte derecha el numero
+    de veces que aparece dicho elemento en la primera lista. -}
+ocurrenciasElementos :: forall a. (Eq a, Show a) => [a] -> [a] -> [(a,Int)]
+ocurrenciasElementos xs ys = ocurrenciasElementosTR xs (reverseTR ys []) []
+-- Uso de reverse para que la salida sea identica.
+    where
+        {- ocurrenciasElementosTR: Funcion basada en RECURSION DE COLA que toma como
+            argumentos dos listas y devuelve una lista de parejas, en donde cada pareja
+            contiene en su parte izquierda un elemento de la segunda lista y en su
+            parte derecha el numero de veces que aparece dicho elemento en la primera
+            lista. 
+            Debe iniciarse con ocurrenciasElementosTR _ _ [] para su correcto 
+            funcionamiento. -}
+        ocurrenciasElementosTR :: forall a. (Eq a, Show a) => [a] -> [a] -> [(a,Int)] -> [(a,Int)]
+        ocurrenciasElementosTR _ [] acc = acc
+        ocurrenciasElementosTR xs (y:ys) acc = ocurrenciasElementosTR xs ys ((y, occurencesTR y xs 0):acc)
+        
+{- occurencesTR: Funcion basada en recursion de cola que toma como argumentos 
+    un elemento y una lista y devuelve la cantidad de veces que aparece el 
+    elemento en la lista. 
+    Debe iniciarse con occurencesTR _ _ 0, para su correcto funcionamiento. -}
+occurencesTR :: Eq a => a -> [a] -> Int -> Int
+occurencesTR _ [] acc = acc
+occurencesTR x (y:ys) acc
+    | x == y = occurencesTR x ys (acc + 1)
+    | otherwise = occurencesTR x ys acc
+
+{- reverseTR: Funcion basada en recursion de cola que toma como 
+    argumento una lista y devuelve la lista invertida.
+    Debe iniciarse con reverseTR _ [] para su correcto funcionamiento. -}
+reverseTR :: [a] -> [a] -> [a]
+reverseTR [] acc = acc
+reverseTR (x:xs) acc = reverseTR xs (x:acc)\end{lstlisting}}
+
+Usamos \verb|ocurrenciasElementos| para pasar de una entrada de dos argumentos, a una con 3. De igual manera, para procurar una lista idéntica al ejemplo, usamos \verb|reversaTR|, igual adaptada al uso de recursión de cola; para que la obtención de elementos pueda obtenerse de atrás para adelante y las duplas aparezcan en el orden correcto c:. 
+            \item {Mostrar los registros de activación generados por la versión de cola con la misma llamada.
+                \begin{center}
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    reverseTR ys acc & reverseTR xs (x:acc) & [1,2] [] & \\ \hline 
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] \_ & \\ \hline
+                \end{NiceTabular}
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    reverseTR ys acc & reverseTR xs (x:acc) & [2] [1] & \\ \hline 
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] \_ & \_ \\ \hline
+                \end{NiceTabular}
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    reverseTR ys acc & reverseTR xs (x:acc) & [] [2,1] & [2,1]\\ \hline 
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] \_ & \_ \\ \hline
+                \end{NiceTabular}
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] [2,1] & \_ \\ \hline
+                \end{NiceTabular}
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    occurencesTR y xs acc & $|$ x == y = occurencesTR x ys (acc + 1) $|$ otherwise = occurencesTR x ys acc & 2 [1,2,3] 0 & \_ \\ \hline
+                    (:) a l & a:l & (2, occurencesTR 2 [1,2,3] 0) [] & \_ \\ \hline
+                    ocurrenciasElementosTR xs (y:ys) acc & ocurrenciasElementosTR xs ys ((y, occurencesTR y xs 0):acc) & [1,2,3] [2,1] [] & \_ \\ \hline
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] [2,1] & \_ \\ \hline
+                \end{NiceTabular}
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    occurencesTR y xs acc & $|$ x == y = occurencesTR x ys (acc + 1) $|$ otherwise = occurencesTR x ys acc & 2 [2,3] 0 & \_ \\ \hline
+                    (:) a l & a:l & (2, occurencesTR 2 [1,2,3] 0) [] & \_ \\ \hline
+                    ocurrenciasElementosTR xs (y:ys) acc & ocurrenciasElementosTR xs ys ((y, occurencesTR y xs 0):acc) & [1,2,3] [2,1] [] & \_ \\ \hline
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] [2,1] & \_ \\ \hline
+                \end{NiceTabular}
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    occurencesTR y xs acc & $|$ x == y = occurencesTR x ys (acc + 1) $|$ otherwise = occurencesTR x ys acc & 2 [3] 1 & \_ \\ \hline
+                    (:) a l & a:l & (2, occurencesTR 2 [1,2,3] 0) [] & \_ \\ \hline
+                    ocurrenciasElementosTR xs (y:ys) acc & ocurrenciasElementosTR xs ys ((y, occurencesTR y xs 0):acc) & [1,2,3] [2,1] [] & \_ \\ \hline
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] [2,1] & \_ \\ \hline
+                \end{NiceTabular}
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    occurencesTR y xs acc & $|$ x == y = occurencesTR x ys (acc + 1) $|$ otherwise = occurencesTR x ys acc & 2 [] 1 & 1 \\ \hline
+                    (:) a l & a:l & (2, occurencesTR 2 [1,2,3] 0) [] & \_ \\ \hline
+                    ocurrenciasElementosTR xs (y:ys) acc & ocurrenciasElementosTR xs ys ((y, occurencesTR y xs 0):acc) & [1,2,3] [2,1] [] & \_ \\ \hline
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] [2,1] & \_ \\ \hline
+                \end{NiceTabular}
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    (:) a l & a:l & (2, 1) [] & (2,1):[] = [(2,1)] \\ \hline
+                    ocurrenciasElementosTR xs (y:ys) acc & ocurrenciasElementosTR xs ys ((y, occurencesTR y xs 0):acc) & [1,2,3] [2,1] [] & \_ \\ \hline
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] [2,1] & \_ \\ \hline
+                \end{NiceTabular} %%%%%
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    ocurrenciasElementosTR xs (y:ys) acc & ocurrenciasElementosTR xs ys ((y, occurencesTR y xs 0):acc) & [1,2,3] [1] [(2,1)] & \_ \\ \hline
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] [2,1] & \_ \\ \hline
+                \end{NiceTabular}
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    occurencesTR y xs acc & $|$ x == y = occurencesTR x ys (acc + 1) $|$ otherwise = occurencesTR x ys acc & 1 [1,2,3] 0 & \_ \\ \hline
+                    (:) a l & a:l & (1, occurencesTR 1 [1,2,3] 0) [(2,1)] & \_ \\ \hline
+                    ocurrenciasElementosTR xs (y:ys) acc & ocurrenciasElementosTR xs ys ((y, occurencesTR y xs 0):acc) & [1,2,3] [1] [(2,1)] & \_ \\ \hline
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] [2,1] & \_ \\ \hline
+                \end{NiceTabular}
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    occurencesTR y xs acc & $|$ x == y = occurencesTR x ys (acc + 1) $|$ otherwise = occurencesTR x ys acc & 1 [2,3] 1 & \_ \\ \hline
+                    (:) a l & a:l & (1, occurencesTR 1 [1,2,3] 0) [(2,1)] & \_ \\ \hline
+                    ocurrenciasElementosTR xs (y:ys) acc & ocurrenciasElementosTR xs ys ((y, occurencesTR y xs 0):acc) & [1,2,3] [1] [(2,1)] & \_ \\ \hline
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] [2,1] & \_ \\ \hline
+                \end{NiceTabular}
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    occurencesTR y xs acc & $|$ x == y = occurencesTR x ys (acc + 1) $|$ otherwise = occurencesTR x ys acc & 1 [3] 1 & \_ \\ \hline
+                    (:) a l & a:l & (1, occurencesTR 1 [1,2,3] 0) [(2,1)] & \_ \\ \hline
+                    ocurrenciasElementosTR xs (y:ys) acc & ocurrenciasElementosTR xs ys ((y, occurencesTR y xs 0):acc) & [1,2,3] [1] [(2,1)] & \_ \\ \hline
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] [2,1] & \_ \\ \hline
+                \end{NiceTabular}
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    occurencesTR y xs acc & $|$ x == y = occurencesTR x ys (acc + 1) $|$ otherwise = occurencesTR x ys acc & 1 [] 1 & \_ \\ \hline
+                    (:) a l & a:l & (1, occurencesTR 1 [1,2,3] 0) [(2,1)] & \_ \\ \hline
+                    ocurrenciasElementosTR xs (y:ys) acc & ocurrenciasElementosTR xs ys ((y, occurencesTR y xs 0):acc) & [1,2,3] [1] [(2,1)] & \_ \\ \hline
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] [2,1] & \_ \\ \hline
+                \end{NiceTabular}
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    occurencesTR y xs acc & $|$ x == y = occurencesTR x ys (acc + 1) $|$ otherwise = occurencesTR x ys acc & 1 [] 1 & 1 \\ \hline
+                    (:) a l & a:l & (1, occurencesTR 1 [1,2,3] 0) [(2,1)] & \_ \\ \hline
+                    ocurrenciasElementosTR xs (y:ys) acc & ocurrenciasElementosTR xs ys ((y, occurencesTR y xs 0):acc) & [1,2,3] [1] [(2,1)] & \_ \\ \hline
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] [2,1] & \_ \\ \hline
+                \end{NiceTabular}
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    (:) a l & a:l & (1,1) [(2,1)] & (1,1):[(2,1)] = [(1,1),(2,1)] \\ \hline
+                    ocurrenciasElementosTR xs (y:ys) acc & ocurrenciasElementosTR xs ys ((y, occurencesTR y xs 0):acc) & [1,2,3] [1] [(2,1)] & \_ \\ \hline
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] [2,1] & \_ \\ \hline
+                \end{NiceTabular}
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    ocurrenciasElementosTR xs (y:ys) acc & ocurrenciasElementosTR \_ [] acc & [1,2,3] [] [(1,1),(2,1)] & [(1,1),(2,1)] \\ \hline
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] [2,1] & \_ \\ \hline
+                \end{NiceTabular}
+
+                $\downarrow$
+                
+                \begin{NiceTabular}{|c c c c|}
+                    Función & Cuerpo & Args & Resultado \\
+                    &&&\\
+                    ocurrenciasElementos xs ys & ocurrenciasElementosTR xs (reverseTR ys []) [] & [1,2,3] [2,1] & [(1,1),(2,1)] \\ \hline
+                \end{NiceTabular}
+                \end{center}
+                \vfill
+                \hfill *Espero se entienda porque de verdad me costó hacer esto :P. Momento \LaTeX.
+            }
+        \end{itemize}
+    }
+\end{enumerate}

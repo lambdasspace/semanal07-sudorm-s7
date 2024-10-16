@@ -1,0 +1,46 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish, mexico]{babel}
+\usepackage[margin=2.54cm,paperheight=8in,paperwidth=15in]{geometry}
+%\usepackage[left=2.54cm,right=2.54cm,top=2.54cm,bottom=2.54cm,paperheight=14in,paperwidth=20in]{geometry}
+% © ccwebi
+\input{docUI/Paquetes}
+
+\newcommand{\Universidad}{Universidad Nacional Autónoma de México}
+\newcommand{\UNIV}{UNAM}
+\newcommand{\Facultad}{Facultad de Ciencias}
+\newcommand{\materia}{Lenguajes de Programación}
+\newcommand{\NomAlumA}{Comas Castañeda Mauricio Santiago}
+\newcommand{\NomAlumB}{Robledo Ramírez Isaac}
+\newcommand{\NomAlumC}{Sánchez Pérez Ricardo}
+\newcommand{\NCuentaA}{320215988}
+\newcommand{\NCuentaB}{320140655}
+\newcommand{\NCuentaC}{315153327}
+\newcommand{\tit}{Semanal 7}
+
+\input{docUI/Extras}
+
+\pagestyle{fancy}
+\color{Blanco}
+\lstset{style=mystyle}
+\pagecolor{Negro}
+\sloppy 
+%--------
+
+%--------
+\begin{document}
+
+\thispagestyle{empty} % Diseño de encabezados y pies de página
+\setlength{\parindent}{0cm} % Indentation 0
+\setlength{\headheight}{22.5pt}
+\setlength{\columnsep}{40pt} % separación de columnas
+
+%------------------------------------------------------------
+% \input{docUI/Portada}
+\newpage
+\input{docUI/MiniPortada}
+%------------------------------------------------------------
+% Inicio del documento
+\input{sections/section}
+\end{document}
